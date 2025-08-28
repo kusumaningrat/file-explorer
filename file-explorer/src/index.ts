@@ -1,15 +1,33 @@
 
+import cors from "@elysiajs/cors";
 import { PrismaClient } from "@prisma/client";
 import { Elysia } from "elysia";
 
 const prisma = new PrismaClient();
 const app = new Elysia()
 
+app.use(cors());
+
 // ✅ Create Folder
 app.post("/folders", async ({ body }) => {
   const { name, parentId } = body as { name: string; parentId?: number };
+  let parentPath = "";
+  if (parentId) {
+    const parent = await prisma.folder.findUnique({ where: { id: parentId } });
+    if (!parent) throw new Error("Parent folder not found");
+    parentPath = parent.path.replace(/\/+$/, ''); 
+  }
+
+  const slug = name.toLowerCase().replace(/\s+/g, "-");
+
+
   return prisma.folder.create({
-    data: { name, parentId: parentId ?? null }
+    data: {
+      name,
+      parentId: parentId ?? null,
+      slug,
+      path: parentPath ? `${parentPath}/${slug}` : `/${slug}`,
+    }
   });
 });
 

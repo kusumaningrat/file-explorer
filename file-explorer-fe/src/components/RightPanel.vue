@@ -55,7 +55,6 @@ watch(
           @blur="subfolder.isEditing = false"
           @keyup.enter="subfolder.isEditing = false"
           class="rename-input"
-          placeholder="New Folder"
           autofocus
         />
         <span v-else>{{ subfolder.name }}</span>
@@ -121,8 +120,10 @@ watch(
 
 .rename-input {
   border: 1px solid #ccc;
-  padding: 5px 6px;
-  border-radius: 4px;
+  padding: 2px 3px;
   font-size: 0.9rem;
+  text-align: center;
+  width: 100px;
+  border-radius: 4px;
 }
 </style>

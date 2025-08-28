@@ -156,7 +156,9 @@ function handleCreateFile() {
     <div class="file-menu-container">
       <button @click="toggleFileDropdown" class="file-button">File</button>
       <div v-if="showFileDropdown" class="file-dropdown-menu">
-        <button @click="handleCreateFolder" class="dropdown-item">Create new Folder</button>
+        <button @click="handleCreateFolder" class="dropdown-item new-folder-input">
+          Create new Folder
+        </button>
         <button @click="handleCreateFile" class="dropdown-item">Create new File</button>
       </div>
     </div>

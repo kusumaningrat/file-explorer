@@ -4,6 +4,7 @@ import { ref, watch } from 'vue'
 const props = defineProps<{
   folder: any
   breadcrumbs: any[]
+  onSaveFolder: (folder: any) => void
 }>()
 
 defineEmits(['select'])
@@ -52,8 +53,8 @@ watch(
         <input
           v-if="subfolder.isEditing"
           v-model="subfolder.name"
-          @blur="subfolder.isEditing = false"
-          @keyup.enter="subfolder.isEditing = false"
+          @blur="props.onSaveFolder(subfolder)"
+          @keyup.enter="props.onSaveFolder(subfolder)"
           class="rename-input"
           autofocus
         />

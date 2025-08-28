@@ -8,7 +8,7 @@ const props = defineProps<{
 }>()
 defineEmits(['toggle', 'select'])
 
-const hasChildren = computed(() => props.node.children && props.node.children.length > 0)
+const hasChildren = computed(() => props.node.hasChildren === true)
 const isExpanded = computed(() => props.expanded.has(props.node.slug))
 </script>
 

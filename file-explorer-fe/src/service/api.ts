@@ -13,3 +13,7 @@ export const getFolderTree = async (id: string) => {
   const response = await axios.get(`${API_BASE_URL}/folders/${id}/tree`)
   return response.data
 }
+export const createFolder = async (name: string, parentId: string) => {
+  const response = await axios.post(`${API_BASE_URL}/folders`, { name, parentId })
+  return response.data
+}

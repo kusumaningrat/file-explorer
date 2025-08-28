@@ -6,7 +6,8 @@ import axios from 'axios'
 
 const computerName = ref('')
 import type { Ref } from 'vue'
-import { getFolderChildren, getFolderTree, getRootFolder } from './api'
+import { createFolder, getFolderChildren, getFolderTree, getRootFolder } from './service/api'
+import { fetchFolderChildren, fetchRootFolder } from './service/main'
 
 const rootFolder = ref<any>(null)
 const expanded: Ref<Set<string>> = ref(new Set<string>())
@@ -35,32 +36,26 @@ function buildPath(targetFolder: any, currentTree: any, currentPath: any[]): any
 }
 
 onMounted(async () => {
-  try {
-    const data = await getRootFolder()
-    if (data && data.length > 0) {
-      rootFolder.value = { ...data[0], children: [] }
-      const children = await getFolderChildren(rootFolder.value.id)
-      rootFolder.value.children = children
-      path.value = [rootFolder.value]
-      // selectedFolder.value = rootFolder.value
-    }
-  } catch (error) {
-    console.error('Error fetching folder data:', error)
-  }
+  const RootFolderData = await fetchRootFolder()
+  rootFolder.value = RootFolderData
+
+  // Load children for the root folder
+  await fetchFolderChildren(rootFolder.value)
+
+  path.value = [rootFolder.value]
 })
 
 async function toggleExpand(folder: any) {
-  const { slug, id } = folder
+  const { slug } = folder
   if (expanded.value.has(slug)) {
     expanded.value.delete(slug)
   } else {
     expanded.value.add(slug)
     if (!folder.children || folder.children.length === 0) {
       try {
-        const children = await getFolderChildren(id)
-        folder.children = children
+        await fetchFolderChildren(folder)
       } catch (error) {
-        console.error(`Error fetching children for folder ${id}:`, error)
+        console.error(`Error fetching children for folder ${folder.id}:`, error)
       }
     }
   }
@@ -99,7 +94,6 @@ function closeFileDropdown() {
 function handleCreateFolder() {
   closeFileDropdown()
   console.log('Create new Folder clicked from App.vue header!')
-  // Implement logic for creating a new folder here (e.g., open a modal)
 
   if (!selectedFolder.value) {
     alert('Please select a folder first to create a new folder inside it.')
@@ -110,22 +104,51 @@ function handleCreateFolder() {
     selectedFolder.value.children = []
   }
 
-  const newFolder = {
-    id: Date.now().toString(),
+  const tempFolder = {
+    id: `temp-${Date.now()}`,
     name: 'New Folder',
     slug: `new-folder-${Date.now()}`,
     children: [],
     isEditing: true,
+    parentId: selectedFolder.value.id, // store parentId here
   }
-  selectedFolder.value.children.push(newFolder)
+
+  selectedFolder.value.children.push(tempFolder)
   expanded.value.add(selectedFolder.value.slug)
-  console.log('New folder created:', newFolder)
+  console.log('New folder created (temp):', tempFolder)
 }
 
 function handleCreateFile() {
   closeFileDropdown()
   console.log('Create new File clicked from App.vue header!')
-  // Implement logic for creating a new file here (e.g., open a modal)
+}
+
+async function saveFolder(subfolder: any) {
+  if (!subfolder.name || subfolder.name.trim() === '') {
+    alert('Folder name cannot be empty')
+    return
+  }
+
+  // Skip if already saved
+  if (subfolder.id && !subfolder.id.toString().startsWith('temp-')) {
+    subfolder.isEditing = false
+    return
+  }
+
+  subfolder.isSaving = true
+  try {
+    const newFolder = await createFolder(subfolder.name.trim(), subfolder.parentId)
+    subfolder.id = newFolder.id
+    subfolder.slug = newFolder.slug
+    subfolder.path = newFolder.path
+    subfolder.isEditing = false
+    console.log('Folder saved in DB:', newFolder)
+  } catch (err) {
+    console.error(err)
+    alert('Failed to create folder')
+  } finally {
+    subfolder.isSaving = false
+  }
 }
 
 // getBreadCrumbPath and findFolderPath are no longer needed
@@ -172,7 +195,12 @@ function handleCreateFile() {
       @toggle="toggleExpand"
       @select="selectFolder"
     />
-    <RightPanel :folder="selectedFolder" :breadcrumbs="path" @select="selectFolder" />
+    <RightPanel
+      :folder="selectedFolder"
+      :breadcrumbs="path"
+      @select="selectFolder"
+      :on-save-folder="saveFolder"
+    />
   </div>
 </template>
 <style scoped>

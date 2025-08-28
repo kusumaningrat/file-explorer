@@ -1,15 +1,17 @@
-// FolderNode.vue
 <script setup lang="ts">
 import { computed } from 'vue'
+
 const props = defineProps<{
   node: any
   expanded: Set<string>
   selected: any
 }>()
 defineEmits(['toggle', 'select'])
+
 const hasChildren = computed(() => props.node.children && props.node.children.length > 0)
 const isExpanded = computed(() => props.expanded.has(props.node.slug))
 </script>
+
 <template>
   <div>
     <div
@@ -20,8 +22,15 @@ const isExpanded = computed(() => props.expanded.has(props.node.slug))
       <span v-if="hasChildren" class="expand-icon" @click.stop="$emit('toggle', node)">
         {{ isExpanded ? '▼' : '▶' }}
       </span>
+
+      <!-- 📂 Folder Icon -->
+      <span class="material-icons folder-icon">
+        {{ isExpanded ? 'folder_open' : 'folder' }}
+      </span>
+
       <span class="folder-name">{{ node.name }}</span>
     </div>
+
     <div v-if="isExpanded && hasChildren" class="children ml-4">
       <FolderNode
         v-for="child in node.children"
@@ -35,14 +44,17 @@ const isExpanded = computed(() => props.expanded.has(props.node.slug))
     </div>
   </div>
 </template>
+
 <style scoped>
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
 .folder-item {
   cursor: pointer;
   padding: 5px 9px;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 .folder-item.selected {
   background-color: #e0e0e0;
@@ -52,7 +64,11 @@ const isExpanded = computed(() => props.expanded.has(props.node.slug))
 }
 .expand-icon {
   font-size: 10px;
-  margin-right: 5px;
+  margin-right: 3px;
+}
+.folder-icon {
+  font-size: 18px;
+  color: #fbc02d; /* yellow folder */
 }
 .children {
   margin-left: 20px;
